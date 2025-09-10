@@ -1,36 +1,6 @@
 const socket = io();
-const myId = socket.id;
+let myId = null;
 let myMarker = null;
-
-if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-        (position) => {
-            const { latitude, longitude } = position.coords;
-
-            // Emit your location to the server
-            socket.emit("send-location", { latitude, longitude });
-            
-            // Update your own marker in blue
-            if (myMarker) {
-                myMarker.setLatLng([latitude, longitude]);
-            } else {
-                myMarker = L.marker([latitude, longitude]).addTo(map);
-                myMarker.bindPopup('You').openPopup();
-            }
-            
-            // Center the map on your location (optional)
-            map.setView([latitude, longitude], 10);
-        },
-        (err) => {
-            console.log(err);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0,
-        }
-    );
-}
 
 const map = L.map('map').setView([0, 0], 2);
 
@@ -50,11 +20,42 @@ const redIcon = new L.Icon({
     shadowSize: [41, 41],
 });
 
-socket.on("location-received", (data) => {
+socket.on('connect', () => {
+    myId = socket.id;
+    console.log('Connected with ID:', myId);
+
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+
+                // Emit location to server
+                socket.emit('send-location', { latitude, longitude });
+
+                // Show own marker in blue
+                if (myMarker) {
+                    myMarker.setLatLng([latitude, longitude]);
+                } else {
+                    myMarker = L.marker([latitude, longitude]).addTo(map);
+                    myMarker.bindPopup('You').openPopup();
+                }
+
+                map.setView([latitude, longitude], 10);
+            },
+            (err) => console.log(err),
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0,
+            }
+        );
+    }
+});
+
+socket.on('location-received', (data) => {
     const { id, latitude, longitude } = data;
 
-    // Skip updating your own marker via this event
-    if (id === socket.id) return;
+    if (id === myId) return;  // Prevent showing your own marker again
 
     if (markers[id]) {
         markers[id].setLatLng([latitude, longitude]);
@@ -64,7 +65,7 @@ socket.on("location-received", (data) => {
     }
 });
 
-socket.on("user-disconnected", (id) => {
+socket.on('user-disconnected', (id) => {
     if (markers[id]) {
         map.removeLayer(markers[id]);
         delete markers[id];
