@@ -1,8 +1,8 @@
     const socket = io();
     let myId = null;
-    let myMarker = null;
+    let myMarker = null
 
-    const map = L.map('map').setView([0, 0], 10);
+    const map = L.map('map').setView([20.5937, 78.9629], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; Sahil Jadhav'
