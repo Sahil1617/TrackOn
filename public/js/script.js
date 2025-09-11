@@ -12,7 +12,7 @@
 
     // Red icon for other users
     const redIcon = new L.Icon({
-        iconUrl: '/images/red-icon.jpg',
+        iconUrl: '/images/red-icon.svg',
         iconSize: [25, 41],
         iconAnchor: [12, 41],
         popupAnchor: [1, -34],
